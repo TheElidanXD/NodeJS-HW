@@ -18,7 +18,7 @@ const validateUserSchema = (schema: Joi.ObjectSchema) => {
             abortEarly: false,
             allowUnknown: false
         });
-        if (error && error.isJoi) {
+        if (error?.isJoi) {
             const errors = error.details.map(e => e.message);
             res.status(400).json({ status: false, errors });
         } else {
@@ -40,6 +40,17 @@ const userList: User[] = [
 const getUndeletedUsers = () => userList.filter(user => !user.isDeleted);
 const getUserById = (id: string) => getUndeletedUsers().find(user => user.id === id);
 
+const findUsersBySubstring = (substring: string) => getUndeletedUsers()
+    .filter(user => substring && user.login.toLowerCase().includes(substring.toLowerCase()))
+    .sort((a, b) => {
+        if (a.login > b.login) {
+            return 1;
+        } else if (b.login > a.login) {
+            return -1;
+        }
+        return 0;
+    });
+
 userService.listen(3000);
 router.use(express.json());
 
@@ -49,7 +60,7 @@ router.param('id', (req, res, next, id) => {
         res.locals.user = currentUser;
         next();
     } else {
-        res.status(404).json({ message: `User with id ${req.params.id} not found` });
+        res.status(404).json({ message: `User with id ${id} not found` });
     }
 });
 
@@ -90,16 +101,7 @@ router.get('/autoSuggestUsers/:substring/:limit', (req, res) => {
     if (Number(req.params.limit) < 1) {
         res.status(400).json({ message: 'Invalid limit' });
     } else {
-        const autoSuggestUsers = getUndeletedUsers().
-            filter(user => req.params.substring && user.login.toLowerCase().includes(req.params.substring.toLowerCase())).
-            sort((a, b) => {
-                if (a.login > b.login) {
-                    return 1;
-                } else if (b.login > a.login) {
-                    return -1;
-                }
-                return 0;
-            });
+        const autoSuggestUsers = findUsersBySubstring(req.params.substring);
         autoSuggestUsers.length ?
             res.json(autoSuggestUsers.slice(0, Number(req.params.limit))) :
             res.status(404).json({ message: 'Users not found' });
