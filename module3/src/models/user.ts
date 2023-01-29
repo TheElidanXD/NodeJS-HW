@@ -1,9 +1,9 @@
-import { DataTypes, Sequelize } from 'sequelize';
+import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
 import { v4 as uuid } from 'uuid';
 
 const user = {
     id: {
-        type: DataTypes.UUIDV4,
+        type: DataTypes.STRING,
         primaryKey: true,
         defaultValue: uuid()
     },
@@ -28,3 +28,5 @@ export interface User {
     age?: number,
     isdeleted?: boolean
 }
+
+export type UserInstance = Model<User, Optional<User, 'id'>>;

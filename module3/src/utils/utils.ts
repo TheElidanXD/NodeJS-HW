@@ -1,6 +1,13 @@
 import Joi from 'joi';
 import { NextFunction, Request, Response } from 'express';
 
+// eslint-disable-next-line no-shadow
+export enum StatusCodes {
+    NO_CONTENT = 204,
+    BAD_REQUEST = 400,
+    NOT_FOUND = 404,
+}
+
 export const validateSchema = (schema: Joi.ObjectSchema) => {
     return (req: Request, res: Response, next: NextFunction) => {
         const { error } = schema.validate(req.body, {
@@ -9,7 +16,7 @@ export const validateSchema = (schema: Joi.ObjectSchema) => {
         });
         if (error?.isJoi) {
             const errors = error.details.map(e => e.message);
-            res.status(400).json({ status: false, errors });
+            res.status(StatusCodes.BAD_REQUEST).json({ status: false, errors });
         } else {
             next();
         }
