@@ -1,23 +1,19 @@
-import { Sequelize, Op } from 'sequelize';
+import { Op } from 'sequelize';
 import UserModel, { User } from '../models/user';
-import * as dotenv from 'dotenv';
-dotenv.config();
-
-const sequelize = new Sequelize(process.env.DATABASE_URL);
-sequelize.authenticate().then(() => {
-    console.log('Connected');
-}).catch(err => {
-    console.error('Connection error:', err);
-});
+import { db } from './database';
+import UserGroupModel from '../models/user-group';
 
 export class UserService {
-    private user = UserModel(sequelize);
+    private user = UserModel(db);
+    private userGroup = UserGroupModel(db);
 
     getAllUsers = () => this.user.findAll(
         { where: { isdeleted: false } }
     );
 
-    createUser = (newUser: Omit<unknown, string>) => this.user.create(newUser);
+    createUser = (newUser: User) => {
+        return this.user.create(newUser as Omit<unknown, string>);
+    };
 
     findUsersBySubstring = (substring: string, limit: number) => this.user.findAll({
         limit,
@@ -57,48 +53,25 @@ export class UserService {
             }
         }
     );
+
+    addNewUserToGroup = async (newUser: User, groupId: string) => {
+        try {
+            return await db.transaction(async t => {
+                const user = await this.user.create(
+                    newUser as Omit<unknown, string>,
+                    { transaction: t }
+                );
+                await this.userGroup.create(
+                    {
+                        groupId,
+                        userId: newUser.id
+                    },
+                    { transaction: t }
+                );
+                return user;
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    };
 }
-// export default () => {
-//     const user = UserModel(sequelize);
-//     return {
-//         getAllUsers: () => user.findAll(
-//             { where: { isdeleted: false } }
-//         ),
-//         createUser: (newUser: User) => user.create(newUser),
-//         findUsersBySubstring: (substring: string, limit: number) => user.findAll({
-//             limit,
-//             order: [['login', 'ASC']],
-//             where: {
-//                 login: {
-//                     [Op.substring]: substring
-//                 },
-//                 isdeleted: false
-//             }
-//         }),
-//         getUserById: (userId: string) => user.findOne({
-//             where: {
-//                 id: userId,
-//                 isdeleted: false
-//             }
-//         }),
-//         updateUser: (userId: string, newUser: User) => user.update(
-//             newUser,
-//             {
-//                 where: {
-//                     id: userId,
-//                     isdeleted: false
-//                 }
-//             }
-//         ),
-//         deleteUser: (userId: string) => user.update(
-//             {
-//                 isdeleted: true
-//             },
-//             {
-//                 where: {
-//                     id: userId
-//                 }
-//             }
-//         )
-//     };
-// };
