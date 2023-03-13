@@ -12,6 +12,14 @@ dotenv.config();
 const app = express();
 app.listen(process.env.DEV_PORT);
 
+process.on('uncaughtException', (err) => {
+    console.error(err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
+});
+
 morgan.token('body', (req: Request) => JSON.stringify(req.body));
 morgan.token('params', (req: Request) => Object.entries(req.params).map(([param, value]) => `${param}:${value}`).join(' '));
 app.use(morgan(':method :url :body :params - :response-time ms'));
@@ -27,5 +35,6 @@ app.use('', appRouter);
 // eslint-disable-next-line no-unused-vars
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     req.params.error = err.message;
-    res.status(StatusCodes.NOT_FOUND).json(err);
+    req.params.errorComesFrom = err.name && err.name.startsWith('Sequelize') ? 'Model' : 'Controller';
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err);
 });
