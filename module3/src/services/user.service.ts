@@ -33,6 +33,14 @@ export class UserService {
         }
     });
 
+    getUserByLoginAndPassword = (login: string, password: string) => this.user.findOne({
+        where: {
+            login,
+            password,
+            isdeleted: false
+        }
+    });
+
     updateUser = (userId: string, newUser: User) => this.user.update(
         newUser,
         {
