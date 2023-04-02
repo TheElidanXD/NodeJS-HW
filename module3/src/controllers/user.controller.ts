@@ -35,14 +35,14 @@ usersRouter.post('/:groupId', validateSchema(userSchema), async (req, res) => {
     }
 });
 
-usersRouter.get('/autoSuggestUsers/:substring/:limit', (req, res) => {
+usersRouter.get('/autoSuggestUsers/:substring/:limit', (req, res, next) => {
     const { substring, limit } = req.params;
     userService.findUsersBySubstring(substring, Number(limit))
         .then((result: UserInstance[]) => {
             res.json(result);
         })
         .catch((err: Error) => {
-            res.status(StatusCodes.NOT_FOUND).json(err);
+            next(err);
         });
 });
 export const userRouter = express.Router();
