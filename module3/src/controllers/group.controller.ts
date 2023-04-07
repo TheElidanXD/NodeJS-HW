@@ -4,13 +4,14 @@ import { Error } from 'sequelize';
 import { StatusCodes, validateSchema } from '../utils/utils';
 import { groupSchema } from '../validators/group';
 import { GroupInstance } from '../models/group';
+import { checkToken } from './auth.controller';
 
 const groupService = new GroupService();
 
 export const groupsRouter = express.Router();
 groupsRouter.use(express.json());
 
-groupsRouter.get('/', (req, res, next) => {
+groupsRouter.get('/', checkToken, (req, res, next) => {
     groupService.getAllGroups()
         .then((value: GroupInstance[]) => {
             res.json(value);
@@ -18,7 +19,7 @@ groupsRouter.get('/', (req, res, next) => {
         .catch((err: Error) => next(err));
 });
 
-groupsRouter.post('/', validateSchema(groupSchema), (req, res, next) => {
+groupsRouter.post('/', checkToken, validateSchema(groupSchema), (req, res, next) => {
     groupService.createGroup(req.body)
         .then((result: GroupInstance) => {
             res.json(result);
@@ -29,7 +30,7 @@ groupsRouter.post('/', validateSchema(groupSchema), (req, res, next) => {
 export const groupRouter = express.Router();
 groupRouter.use(express.json());
 
-groupRouter.get('/:id', (req, res, next) => {
+groupRouter.get('/:id', checkToken, (req, res, next) => {
     groupService.getGroupById(req.params.id)
         .then((result: GroupInstance) => {
             res.json(result);
@@ -37,7 +38,7 @@ groupRouter.get('/:id', (req, res, next) => {
         .catch((err: Error) => next(err));
 });
 
-groupRouter.put('/:id', validateSchema(groupSchema), (req, res, next) => {
+groupRouter.put('/:id', checkToken, validateSchema(groupSchema), (req, res, next) => {
     groupService.updateGroup(req.params.id, req.body)
         .then(() => {
             res.status(StatusCodes.NO_CONTENT).send();
@@ -45,7 +46,7 @@ groupRouter.put('/:id', validateSchema(groupSchema), (req, res, next) => {
         .catch((err: Error) => next(err));
 });
 
-groupRouter.delete('/:id', (req, res, next) => {
+groupRouter.delete('/:id', checkToken, (req, res, next) => {
     groupService.deleteGroup(req.params.id)
         .then(() => {
             res.status(StatusCodes.NO_CONTENT).send();
