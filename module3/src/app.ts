@@ -11,8 +11,8 @@ import * as dotenv from 'dotenv';
 import { StatusCodes } from './utils/utils';
 dotenv.config();
 
-const app = express();
-app.listen(process.env.DEV_PORT);
+export const app = express();
+export const server = app.listen(process.env.DEV_PORT);
 app.use(cors());
 
 process.on('uncaughtException', (err) => {
@@ -24,7 +24,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 morgan.token('body', (req: Request) => JSON.stringify(req.body));
-morgan.token('params', (req: Request) => Object.entries(req.params).map(([param, value]) => `${param}:${value}`).join(' '));
+morgan.token('params', (req: Request) => Object.entries(req.params || []).map(([param, value]) => `${param}:${value}`).join(' '));
 app.use(morgan(':method :url :body :params - :response-time ms'));
 
 const appRouter = express.Router();
